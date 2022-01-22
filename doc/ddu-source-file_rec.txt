@@ -36,7 +36,7 @@ EXAMPLES				*ddu-source-file_rec-examples*
 	      \ })
 
 	" Use file_rec source.
-	call ddu#start([{'name': 'file_rec'}])
+	call ddu#start({'sources': [{'name': 'file_rec'}]})
 <
 
 ==============================================================================
