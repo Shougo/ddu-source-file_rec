@@ -51,6 +51,10 @@ export class Source extends BaseSource<Params> {
         } catch (e: unknown) {
           if (e === aborted) {
             return;
+          } else if (e instanceof Deno.errors.PermissionDenied) {
+            // Ignore this error
+            // See https://github.com/Shougo/ddu-source-file_rec/issues/2
+            return;
           }
           console.error(e);
         }
