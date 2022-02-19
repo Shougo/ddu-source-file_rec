@@ -88,11 +88,8 @@ async function* walk(
     while (true) {
       try {
         const { done, value } = await Promise.race([waiter, it.next()]);
-        if (done) {
+        if (done || value == undefined) {
           return;
-        }
-        if (value == undefined) {
-          continue;
         }
         const entry = value as Deno.DirEntry;
         const abspath = join(dir, entry.name);
