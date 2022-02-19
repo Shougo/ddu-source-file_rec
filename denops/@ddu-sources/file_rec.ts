@@ -52,9 +52,7 @@ export class Source extends BaseSource<Params> {
             controller.enqueue(chunk);
           }
         } catch (e: unknown) {
-          if (e === aborted || e instanceof Deno.errors.PermissionDenied) {
-            // Ignore this error
-            // See https://github.com/Shougo/ddu-source-file_rec/issues/2
+          if (e === aborted) {
             return;
           }
           console.error(e);
@@ -88,25 +86,38 @@ async function* walk(
   const walk = async function* (dir: string): AsyncGenerator<Item<ActionData>> {
     const it = Deno.readDir(dir)[Symbol.asyncIterator]();
     while (true) {
-      const { done, value } = await Promise.race([waiter, it.next()]);
-      if (done || value == undefined) {
-        return;
-      }
-      const entry = value as Deno.DirEntry;
-      const abspath = join(dir, entry.name);
-
-      if (!entry.isDirectory) {
-        yield {
-          word: relative(root, abspath),
-          action: {
-            path: abspath,
-          },
-        };
-      } else {
-        if (ignoredDirectories.includes(entry.name)) {
+      try {
+        const { done, value } = await Promise.race([waiter, it.next()]);
+        if (done) {
+          return;
+        }
+        if (value == undefined) {
           continue;
         }
-        yield* walk(abspath);
+        const entry = value as Deno.DirEntry;
+        const abspath = join(dir, entry.name);
+
+        if (!entry.isDirectory) {
+          yield {
+            word: relative(root, abspath),
+            action: {
+              path: abspath,
+            },
+          };
+        } else {
+          if (ignoredDirectories.includes(entry.name)) {
+            continue;
+          }
+          yield* walk(abspath);
+        }
+      } catch (e: unknown) {
+        if (e instanceof Deno.errors.PermissionDenied) {
+          // Ignore this error
+          // See https://github.com/Shougo/ddu-source-file_rec/issues/2
+          continue;
+        }
+
+        throw e;
       }
     }
   };
