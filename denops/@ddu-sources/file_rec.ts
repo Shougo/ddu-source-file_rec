@@ -1,17 +1,15 @@
-import {
-  BaseSource,
-  Item,
-} from "https://deno.land/x/ddu_vim@v0.12.2/types.ts";
+import { BaseSource, Item } from "https://deno.land/x/ddu_vim@v0.12.2/types.ts";
 import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.12.2/deps.ts";
-import { join, resolve } from "https://deno.land/std@0.125.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.2.0/file.ts";
+
+import { join, resolve } from "https://deno.land/std@0.125.0/path/mod.ts";
 import { relative } from "https://deno.land/std@0.125.0/path/mod.ts";
 import { deferred } from "https://deno.land/std@0.125.0/async/mod.ts";
 
 const chunkMinSize = 100;
 const chunkMaxSize = 20000;
 
-const aborted = Symbol('aborted');
+const aborted = Symbol("aborted");
 
 type Params = {
   ignoredDirectories: string[];
@@ -19,8 +17,8 @@ type Params = {
 };
 
 type Args = {
-  denops: Denops,
-  sourceParams: Params,
+  denops: Denops;
+  sourceParams: Params;
 };
 
 export class Source extends BaseSource<Params> {
@@ -54,23 +52,20 @@ export class Source extends BaseSource<Params> {
             controller.enqueue(chunk);
           }
         } catch (e: unknown) {
-          if (e === aborted) {
-            return;
-          } else if (e instanceof Deno.errors.PermissionDenied) {
+          if (e === aborted || e instanceof Deno.errors.PermissionDenied) {
             // Ignore this error
             // See https://github.com/Shougo/ddu-source-file_rec/issues/2
             return;
           }
           console.error(e);
-        }
-        finally {
+        } finally {
           controller.close();
         }
       },
 
       cancel(reason): void {
         abortController.abort(reason);
-      }
+      },
     });
   }
 
