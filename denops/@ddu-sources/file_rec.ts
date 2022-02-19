@@ -8,7 +8,8 @@ import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.2.0/file.ts";
 import { relative } from "https://deno.land/std@0.125.0/path/mod.ts";
 import { deferred } from "https://deno.land/std@0.125.0/async/mod.ts";
 
-const chunkSize = 20000;
+const chunkMinSize = 100;
+const chunkMaxSize = 20000;
 
 const aborted = Symbol('aborted');
 
@@ -36,6 +37,7 @@ export class Source extends BaseSource<Params> {
           sourceParams.ignoredDirectories,
           abortController.signal,
         );
+        let chunkSize = chunkMinSize;
         let chunk: Item<ActionData>[] = [];
         try {
           for await (const item of it) {
@@ -43,6 +45,9 @@ export class Source extends BaseSource<Params> {
             if (chunk.length > chunkSize) {
               controller.enqueue(chunk);
               chunk = [];
+              if (chunkSize < chunkMaxSize) {
+                chunkSize += chunkSize;
+              }
             }
           }
           if (chunk.length) {
