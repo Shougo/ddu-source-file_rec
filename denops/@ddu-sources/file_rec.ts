@@ -35,7 +35,7 @@ export class Source extends BaseSource<Params> {
           sourceParams.ignoredDirectories,
           abortController.signal,
         );
-        let chunkSize = chunkMaxSize;
+        let chunkSize = chunkMinSize;
         let chunk: Item<ActionData>[] = [];
         try {
           for await (const item of it) {
@@ -44,7 +44,7 @@ export class Source extends BaseSource<Params> {
               controller.enqueue(chunk);
               chunk = [];
               if (chunkSize < chunkMaxSize) {
-                chunkSize += chunkSize * 5;
+                chunkSize += chunkSize;
               }
             }
           }
