@@ -42,14 +42,14 @@ EXAMPLES				*ddu-source-file_rec-examples*
 ==============================================================================
 PARAMS					*ddu-source-file_rec-params*
 
-			   *ddu-source-file_rec-param-ignoredDirectories*
+				*ddu-source-file_rec-param-ignoredDirectories*
 ignoredDirectories	(string[])
 		Ignored directories list.
 		Note: It must be directory name.
 
 		Default: ".git"
 
-				    	*ddu-source-file_rec-param-path*
+				*ddu-source-file_rec-param-path*
 path		(string)
 		Base path of files.  If it is empty, |getcwd()| is used
 		instead.
