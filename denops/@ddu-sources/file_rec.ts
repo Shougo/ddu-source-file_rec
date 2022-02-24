@@ -1,9 +1,9 @@
-import { BaseSource, Item } from "https://deno.land/x/ddu_vim@v0.12.2/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.12.2/deps.ts";
-import { join, resolve } from "https://deno.land/std@0.125.0/path/mod.ts";
+import { BaseSource, Item } from "https://deno.land/x/ddu_vim@v0.14/types.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.14/deps.ts";
+import { join, resolve } from "https://deno.land/std@0.127.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.2.0/file.ts";
-import { relative } from "https://deno.land/std@0.125.0/path/mod.ts";
-import { deferred } from "https://deno.land/std@0.125.0/async/mod.ts";
+import { relative } from "https://deno.land/std@0.127.0/path/mod.ts";
+import { abortable } from "https://deno.land/std@0.127.0/async/abortable.ts";
 
 const chunkSize = 1000;
 const enqueueSize1st = 1000;
@@ -48,7 +48,7 @@ export class Source extends BaseSource<Params> {
             controller.enqueue(items);
           }
         } catch (e: unknown) {
-          if (e instanceof AbortedError) {
+          if (e instanceof DOMException) {
             return;
           }
           console.error(e);
@@ -115,44 +115,4 @@ async function* walk(
     }
   };
   yield* walk(root);
-}
-
-// XXX: Replace it with the following
-// https://github.com/denoland/deno_std/pull/1939
-class AbortedError extends Error {
-  // This `reason` comes from `AbortSignal` thus must be `any`.
-  // deno-lint-ignore no-explicit-any
-  reason?: any;
-
-  // This `reason` comes from `AbortSignal` thus must be `any`.
-  // deno-lint-ignore no-explicit-any
-  constructor(reason?: any) {
-    super(reason ? `Aborted: ${reason}` : "Aborted");
-    this.name = "AbortedError";
-    this.reason = reason;
-  }
-}
-
-// XXX: Replace it with the following
-// https://github.com/denoland/deno_std/pull/1939
-async function* abortable<T>(
-  p: AsyncIterable<T>,
-  signal: AbortSignal,
-): AsyncGenerator<T> {
-  if (signal.aborted) {
-    throw new AbortedError(signal.reason);
-  }
-  const waiter = deferred<never>();
-  const abort = () => waiter.reject(new AbortedError(signal.reason));
-  signal.addEventListener("abort", abort, { once: true });
-
-  const it = p[Symbol.asyncIterator]();
-  while (true) {
-    const { done, value } = await Promise.race([waiter, it.next()]);
-    if (done) {
-      signal.removeEventListener("abort", abort);
-      return;
-    }
-    yield value;
-  }
 }
