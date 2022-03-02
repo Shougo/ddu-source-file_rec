@@ -1,5 +1,5 @@
-import { BaseSource, Item } from "https://deno.land/x/ddu_vim@v0.14/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.14/deps.ts";
+import { BaseSource, SourceOptions, Item } from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v1.2.0/deps.ts";
 import { join, resolve } from "https://deno.land/std@0.127.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.2.0/file.ts";
 import { relative } from "https://deno.land/std@0.127.0/path/mod.ts";
@@ -11,23 +11,23 @@ const enqueueSize2nd = 100000;
 
 type Params = {
   ignoredDirectories: string[];
-  path: string;
 };
 
 type Args = {
   denops: Denops;
+  sourceOptions: SourceOptions;
   sourceParams: Params;
 };
 
 export class Source extends BaseSource<Params> {
   kind = "file";
 
-  gather({ denops, sourceParams }: Args): ReadableStream<Item<ActionData>[]> {
+  gather({ denops, sourceOptions, sourceParams }: Args): ReadableStream<Item<ActionData>[]> {
     const abortController = new AbortController();
 
     return new ReadableStream({
       async start(controller) {
-        const root = sourceParams.path || await fn.getcwd(denops) as string;
+        const root = sourceOptions.path || await fn.getcwd(denops) as string;
         const it = walk(
           resolve(root, root),
           sourceParams.ignoredDirectories,
@@ -66,7 +66,6 @@ export class Source extends BaseSource<Params> {
   params(): Params {
     return {
       ignoredDirectories: [".git"],
-      path: "",
     };
   }
 }
