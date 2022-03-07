@@ -1,9 +1,9 @@
 import { BaseSource, SourceOptions, Item } from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
 import { Denops, fn } from "https://deno.land/x/ddu_vim@v1.2.0/deps.ts";
-import { join, resolve } from "https://deno.land/std@0.127.0/path/mod.ts";
-import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.2.0/file.ts";
-import { relative } from "https://deno.land/std@0.127.0/path/mod.ts";
-import { abortable } from "https://deno.land/std@0.127.0/async/abortable.ts";
+import { join, resolve } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.3.0/file.ts";
+import { relative } from "https://deno.land/std@0.128.0/path/mod.ts";
+import { abortable } from "https://deno.land/std@0.128.0/async/abortable.ts";
 
 const chunkSize = 1000;
 const enqueueSize1st = 1000;
@@ -88,6 +88,7 @@ async function* walk(
             word: relative(root, abspath),
             action: {
               path: abspath,
+              isDirectory: false,
             },
           });
           if (n >= chunkSize) {
