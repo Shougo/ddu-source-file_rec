@@ -1,15 +1,16 @@
-import { BaseSource, SourceOptions, Item } from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
+import {
+  BaseSource,
+  Item,
+  SourceOptions,
+} from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
 import { Denops, fn } from "https://deno.land/x/ddu_vim@v1.2.0/deps.ts";
 import { join, resolve } from "https://deno.land/std@0.129.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.3.0/file.ts";
 import { relative } from "https://deno.land/std@0.129.0/path/mod.ts";
 import { abortable } from "https://deno.land/std@0.129.0/async/mod.ts";
 
-const chunkSize = 1000;
-const enqueueSize1st = 1000;
-const enqueueSize2nd = 100000;
-
 type Params = {
+  chunkSize: 1000;
   ignoredDirectories: string[];
 };
 
@@ -22,7 +23,9 @@ type Args = {
 export class Source extends BaseSource<Params> {
   kind = "file";
 
-  gather({ denops, sourceOptions, sourceParams }: Args): ReadableStream<Item<ActionData>[]> {
+  gather(
+    { denops, sourceOptions, sourceParams }: Args,
+  ): ReadableStream<Item<ActionData>[]> {
     const abortController = new AbortController();
 
     return new ReadableStream({
@@ -32,14 +35,15 @@ export class Source extends BaseSource<Params> {
           resolve(root, root),
           sourceParams.ignoredDirectories,
           abortController.signal,
+          sourceParams.chunkSize,
         );
-        let enqueueSize = enqueueSize1st;
+        let enqueueSize: number = sourceParams.chunkSize;
         let items: Item<ActionData>[] = [];
         try {
           for await (const chunk of it) {
             items = items.concat(chunk);
             if (items.length >= enqueueSize) {
-              enqueueSize = enqueueSize2nd;
+              enqueueSize = 10 * sourceParams.chunkSize;
               controller.enqueue(items);
               items = [];
             }
@@ -65,6 +69,7 @@ export class Source extends BaseSource<Params> {
 
   params(): Params {
     return {
+      chunkSize: 1000,
       ignoredDirectories: [".git"],
     };
   }
@@ -74,6 +79,7 @@ async function* walk(
   root: string,
   ignoredDirectories: string[],
   signal: AbortSignal,
+  chunkSize: number,
 ): AsyncGenerator<Item<ActionData>[]> {
   const walk = async function* (
     dir: string,

@@ -42,6 +42,12 @@ EXAMPLES				*ddu-source-file_rec-examples*
 ==============================================================================
 PARAMS					*ddu-source-file_rec-params*
 
+				*ddu-source-file_rec-param-chunkSize*
+chunkSize		(number)
+		The gather files chunkSize.
+
+		Default: 1000
+
 				*ddu-source-file_rec-param-ignoredDirectories*
 ignoredDirectories	(string[])
 		Ignored directories list.
