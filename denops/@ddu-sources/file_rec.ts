@@ -21,9 +21,9 @@ type Args = {
 };
 
 export class Source extends BaseSource<Params> {
-  kind = "file";
+  override kind = "file";
 
-  gather(
+  override gather(
     { denops, sourceOptions, sourceParams }: Args,
   ): ReadableStream<Item<ActionData>[]> {
     const abortController = new AbortController();
@@ -67,7 +67,7 @@ export class Source extends BaseSource<Params> {
     });
   }
 
-  params(): Params {
+  override params(): Params {
     return {
       chunkSize: 1000,
       ignoredDirectories: [".git"],
