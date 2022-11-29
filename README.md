@@ -1,6 +1,6 @@
 # ddu-source-file_rec
 
-File resursive source for ddu.vim
+File recursive source for ddu.vim
 
 This source collects files in the path recursively.
 
