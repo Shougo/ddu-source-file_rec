@@ -24,6 +24,7 @@ https://github.com/Shougo/ddu-kind-file
 call ddu#start(#{ sources: [#{ name: 'file_rec' }] })
 
 " Change base path.
+" NOTE: "path" must be full path.
 call ddu#custom#patch_global('sourceOptions', #{
       \   file_rec: #{ path: expand("~") },
       \ })
