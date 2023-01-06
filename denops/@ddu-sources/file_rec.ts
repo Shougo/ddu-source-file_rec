@@ -88,8 +88,7 @@ async function* walk(
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
-
-        if (!entry.isDirectory) {
+        if ( (await Deno.stat(await Deno.realPath(abspath))).isFile ) {
           const n = chunk.push({
             word: relative(root, abspath),
             action: {
@@ -101,10 +100,11 @@ async function* walk(
             yield chunk;
             chunk = [];
           }
-        } else {
-          if (ignoredDirectories.includes(entry.name)) {
+        } else if (ignoredDirectories.includes(entry.name)) {
             continue;
-          }
+        } else if (entry.isSymlink && (await Deno.stat(await Deno.realPath(abspath))).isDirectory && abspath.includes(await Deno.realPath(abspath))) {
+            continue;
+        } else {
           yield* walk(abspath);
         }
       }
