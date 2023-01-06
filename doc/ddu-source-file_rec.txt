@@ -57,8 +57,8 @@ ignoredDirectories	(string[])
 
 				*ddu-source-file_rec-param-isExpandSymbDir*
 isExpandSymbDir 	(bool)
-		When true, It search files in a directory to which 
-		symbolic link points.
+		When true, It search within a directory pointed to by 
+		searched symbolic link.
 
 		Default: "v:false"
 
