@@ -12,6 +12,7 @@ import { abortable } from "https://deno.land/std@0.166.0/async/mod.ts";
 type Params = {
   chunkSize: 1000;
   ignoredDirectories: string[];
+  isExpandSymbDir: boolean;
 };
 
 type Args = {
@@ -36,6 +37,7 @@ export class Source extends BaseSource<Params> {
           sourceParams.ignoredDirectories,
           abortController.signal,
           sourceParams.chunkSize,
+          sourceParams.isExpandSymbDir,
         );
         let enqueueSize: number = sourceParams.chunkSize;
         let items: Item<ActionData>[] = [];
@@ -71,6 +73,7 @@ export class Source extends BaseSource<Params> {
     return {
       chunkSize: 1000,
       ignoredDirectories: [".git"],
+      isExpandSymbDir: false,
     };
   }
 }
@@ -80,6 +83,7 @@ async function* walk(
   ignoredDirectories: string[],
   signal: AbortSignal,
   chunkSize: number,
+  isExpandSymbDir: boolean,
 ): AsyncGenerator<Item<ActionData>[]> {
   const walk = async function* (
     dir: string,
@@ -88,7 +92,7 @@ async function* walk(
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
-        if ( (await Deno.stat(await Deno.realPath(abspath))).isFile ) {
+        if ( (await Deno.stat(await Deno.realPath(abspath))).isFile || (! isExpandSymbDir && ! entry.isDirectory )) {
           const n = chunk.push({
             word: relative(root, abspath),
             action: {
@@ -102,7 +106,7 @@ async function* walk(
           }
         } else if (ignoredDirectories.includes(entry.name)) {
             continue;
-        } else if (entry.isSymlink && (await Deno.stat(await Deno.realPath(abspath))).isDirectory && abspath.includes(await Deno.realPath(abspath))) {
+        } else if (entry.isSymlink && (await Deno.stat(await Deno.realPath(abspath))).isDirectory && abspath.includes(await Deno.realPath(abspath)) ) {
             continue;
         } else {
           yield* walk(abspath);
