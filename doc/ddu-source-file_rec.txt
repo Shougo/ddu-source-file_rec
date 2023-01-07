@@ -55,12 +55,12 @@ ignoredDirectories	(string[])
 
 		Default: ".git"
 
-				*ddu-source-file_rec-param-isExpandSymbDir*
-isExpandSymbDir 	(bool)
-		When true, It search within a directory pointed to by
+			*ddu-source-file_rec-param-expandSymbolicLink*
+expandSymbolicLink 	(bool)
+		When true, It searches within a directory pointed to by
 		searched symbolic link.
 
-		Default: "v:false"
+		Default: v:false
 
 
 ==============================================================================

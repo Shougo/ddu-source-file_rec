@@ -4,15 +4,15 @@ import {
   SourceOptions,
 } from "https://deno.land/x/ddu_vim@v2.0.0/types.ts";
 import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.0.0/deps.ts";
-import { join, resolve } from "https://deno.land/std@0.166.0/path/mod.ts";
+import { join, resolve } from "https://deno.land/std@0.171.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.3.2/file.ts";
-import { relative } from "https://deno.land/std@0.166.0/path/mod.ts";
-import { abortable } from "https://deno.land/std@0.166.0/async/mod.ts";
+import { relative } from "https://deno.land/std@0.171.0/path/mod.ts";
+import { abortable } from "https://deno.land/std@0.171.0/async/mod.ts";
 
 type Params = {
   chunkSize: 1000;
   ignoredDirectories: string[];
-  isExpandSymbDir: boolean;
+  expandSymbolicLink: boolean;
 };
 
 type Args = {
@@ -37,7 +37,7 @@ export class Source extends BaseSource<Params> {
           sourceParams.ignoredDirectories,
           abortController.signal,
           sourceParams.chunkSize,
-          sourceParams.isExpandSymbDir,
+          sourceParams.expandSymbolicLink,
         );
         let enqueueSize: number = sourceParams.chunkSize;
         let items: Item<ActionData>[] = [];
@@ -73,7 +73,7 @@ export class Source extends BaseSource<Params> {
     return {
       chunkSize: 1000,
       ignoredDirectories: [".git"],
-      isExpandSymbDir: false,
+      expandSymbolicLink: false,
     };
   }
 }
@@ -83,7 +83,7 @@ async function* walk(
   ignoredDirectories: string[],
   signal: AbortSignal,
   chunkSize: number,
-  isExpandSymbDir: boolean,
+  expandSymbolicLink: boolean,
 ): AsyncGenerator<Item<ActionData>[]> {
   const walk = async function* (
     dir: string,
@@ -92,7 +92,10 @@ async function* walk(
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
-        if ( (await Deno.stat(await Deno.realPath(abspath))).isFile || (! isExpandSymbDir && ! entry.isDirectory )) {
+        if (
+          (await Deno.stat(await Deno.realPath(abspath))).isFile ||
+          (!expandSymbolicLink && !entry.isDirectory)
+        ) {
           const n = chunk.push({
             word: relative(root, abspath),
             action: {
@@ -105,9 +108,13 @@ async function* walk(
             chunk = [];
           }
         } else if (ignoredDirectories.includes(entry.name)) {
-            continue;
-        } else if (entry.isSymlink && (await Deno.stat(await Deno.realPath(abspath))).isDirectory && abspath.includes(await Deno.realPath(abspath)) ) {
-            continue;
+          continue;
+        } else if (
+          entry.isSymlink &&
+          (await Deno.stat(await Deno.realPath(abspath))).isDirectory &&
+          abspath.includes(await Deno.realPath(abspath))
+        ) {
+          continue;
         } else {
           yield* walk(abspath);
         }
