@@ -2,8 +2,8 @@ import {
   BaseSource,
   Item,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.0.0/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.0.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.2.0/types.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.2.0/deps.ts";
 import { join, resolve } from "https://deno.land/std@0.171.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.3.2/file.ts";
 import { relative } from "https://deno.land/std@0.171.0/path/mod.ts";
@@ -92,10 +92,22 @@ async function* walk(
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
-        if (
-          (await Deno.stat(await Deno.realPath(abspath))).isFile ||
-          (!expandSymbolicLink && !entry.isDirectory)
-        ) {
+
+        if (!await exists(abspath)) {
+          // Skip invalid files
+          continue;
+        }
+
+        const stat = await (async () => {
+          let ret = await Deno.lstat(abspath);
+          if (ret.isSymlink) {
+            ret = await Deno.stat(abspath);
+            ret.isSymlink = true;
+          }
+          return ret;
+        })();
+
+        if (stat.isFile || (!expandSymbolicLink && !entry.isDirectory)) {
           const n = chunk.push({
             word: relative(root, abspath),
             action: {
@@ -133,3 +145,15 @@ async function* walk(
   };
   yield* walk(root);
 }
+
+const exists = async (path: string) => {
+  // Note: Deno.stat() may be failed
+  try {
+    await Deno.stat(path);
+    return true;
+  } catch (_: unknown) {
+    // Ignore stat exception
+  }
+
+  return false;
+};
