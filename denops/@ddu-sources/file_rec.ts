@@ -96,7 +96,8 @@ async function* walk(
             continue;
         } else if (
           (await Deno.stat(await Deno.realPath(abspath))).isFile ||
-          (!expandSymbolicLink && !entry.isDirectory)
+          (!expandSymbolicLink && !entry.isDirectory) || 
+          (!entry.isDirectory && !entry.isFile && ! entry.isSymLink)
         ) {
           const n = chunk.push({
             word: relative(root, abspath),
@@ -117,10 +118,8 @@ async function* walk(
           abspath.includes(await Deno.realPath(abspath))
         ) {
           continue;
-        } else if ( (await Deno.stat(await Deno.realPath(abspath))).isDirectory ){
-          yield* walk(abspath);
         } else {
-          continue;
+          yield* walk(abspath);
         }
       }
       if (chunk.length) {
