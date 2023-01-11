@@ -2,8 +2,8 @@ import {
   BaseSource,
   Item,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.0.0/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.0.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.1.0/types.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.1.0/deps.ts";
 import { join, resolve } from "https://deno.land/std@0.171.0/path/mod.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.3.2/file.ts";
 import { relative } from "https://deno.land/std@0.171.0/path/mod.ts";
