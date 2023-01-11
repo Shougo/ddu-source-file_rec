@@ -92,7 +92,9 @@ async function* walk(
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
-        if (
+        if ( await isBrokenLink(abspath) ) {
+            continue;
+        } else if (
           (await Deno.stat(await Deno.realPath(abspath))).isFile ||
           (!expandSymbolicLink && !entry.isDirectory)
         ) {
@@ -115,8 +117,10 @@ async function* walk(
           abspath.includes(await Deno.realPath(abspath))
         ) {
           continue;
-        } else {
+        } else if ( (await Deno.stat(await Deno.realPath(abspath))).isDirectory ){
           yield* walk(abspath);
+        } else {
+          continue;
         }
       }
       if (chunk.length) {
@@ -132,4 +136,14 @@ async function* walk(
     }
   };
   yield* walk(root);
+}
+
+async function isBrokenLink(target: string): Promise<boolean>{
+    try{
+        let check = await Deno.stat(target);
+        return false;
+    } catch (e) {
+        console.error(target + " is broken link");
+        return true;
+    }
 }
