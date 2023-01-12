@@ -100,14 +100,18 @@ async function* walk(
 
         const stat = await (async () => {
           let ret = await Deno.lstat(abspath);
-          if (ret.isSymlink) {
-            ret = await Deno.stat(abspath);
-            ret.isSymlink = true;
+          if (ret.isSymlink && expandSymbolicLink) {
+            try {
+              ret = await Deno.stat(abspath);
+              ret.isSymlink = true;
+            } catch (_: unknown) {
+              // Ignore stat exception
+            }
           }
           return ret;
         })();
 
-        if (stat.isFile || (!expandSymbolicLink && !entry.isDirectory)) {
+        if (!stat.isDirectory) {
           const n = chunk.push({
             word: relative(root, abspath),
             action: {
@@ -122,10 +126,10 @@ async function* walk(
         } else if (ignoredDirectories.includes(entry.name)) {
           continue;
         } else if (
-          entry.isSymlink &&
-          (await Deno.stat(await Deno.realPath(abspath))).isDirectory &&
+          stat.isSymlink && stat.isDirectory &&
           abspath.includes(await Deno.realPath(abspath))
         ) {
+          // Looped link
           continue;
         } else {
           yield* walk(abspath);
