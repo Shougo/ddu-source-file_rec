@@ -92,24 +92,12 @@ async function* walk(
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
+        const stat = await readStat(abspath, expandSymbolicLink);
 
-        if (!await exists(abspath)) {
+        if (stat === null) {
           // Skip invalid files
           continue;
         }
-
-        const stat = await (async () => {
-          let ret = await Deno.lstat(abspath);
-          if (ret.isSymlink && expandSymbolicLink) {
-            try {
-              ret = await Deno.stat(abspath);
-              ret.isSymlink = true;
-            } catch (_: unknown) {
-              // Ignore stat exception
-            }
-          }
-          return ret;
-        })();
 
         if (!stat.isDirectory) {
           const n = chunk.push({
@@ -150,14 +138,21 @@ async function* walk(
   yield* walk(root);
 }
 
-const exists = async (path: string) => {
-  // Note: Deno.stat() may be failed
+async function readStat(
+  path: string,
+  expandSymbolicLink: boolean,
+): Promise<Deno.FileInfo | null> {
   try {
-    await Deno.stat(path);
-    return true;
+    const stat = await Deno.lstat(path);
+    if (stat.isSymlink && expandSymbolicLink) {
+      return {
+        ...(await Deno.stat(path)),
+        isSymlink: true,
+      };
+    }
+    return stat;
   } catch (_: unknown) {
     // Ignore stat exception
+    return null;
   }
-
-  return false;
-};
+}
