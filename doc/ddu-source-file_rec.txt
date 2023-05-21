@@ -9,6 +9,7 @@ Introduction		|ddu-source-file_rec-introduction|
 Install			|ddu-source-file_rec-install|
 Examples		|ddu-source-file_rec-examples|
 Params			|ddu-source-file_rec-params|
+FAQ			|ddu-source-file_rec-faq|
 
 
 ==============================================================================
@@ -61,6 +62,17 @@ expandSymbolicLink 	(bool)
 		searched symbolic link.
 
 		Default: v:false
+
+
+==============================================================================
+FREQUENTLY ASKED QUESTIONS (FAQ)		*ddu-source-file_rec-faq*
+
+Q: ".gitignore" is not respected.
+
+A: It is feature.  If you want to use ".gitignore", please use
+"ddu-source-file_external" instead.
+
+https://github.com/matsui54/ddu-source-file_external
 
 
 ==============================================================================
