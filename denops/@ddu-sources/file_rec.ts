@@ -2,12 +2,12 @@ import {
   BaseSource,
   Item,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.2.0/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.2.0/deps.ts";
-import { join, resolve } from "https://deno.land/std@0.171.0/path/mod.ts";
-import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.3.2/file.ts";
-import { relative } from "https://deno.land/std@0.171.0/path/mod.ts";
-import { abortable } from "https://deno.land/std@0.171.0/async/mod.ts";
+} from "https://deno.land/x/ddu_vim@v3.6.0/types.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v3.6.0/deps.ts";
+import { join, resolve } from "https://deno.land/std@0.204.0/path/mod.ts";
+import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.7.1/file.ts";
+import { relative } from "https://deno.land/std@0.204.0/path/mod.ts";
+import { abortable } from "https://deno.land/std@0.204.0/async/mod.ts";
 
 type Params = {
   chunkSize: 1000;
