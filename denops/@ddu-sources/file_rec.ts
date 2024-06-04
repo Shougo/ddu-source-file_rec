@@ -1,11 +1,14 @@
 import {
   BaseSource,
+  Context,
   Item,
   SourceOptions,
 } from "https://deno.land/x/ddu_vim@v4.0.0/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v4.0.0/deps.ts";
-import { join, resolve } from "jsr:@std/path@0.224.0";
+import { Denops } from "https://deno.land/x/ddu_vim@v4.0.0/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v4.0.0/utils.ts";
 import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.7.1/file.ts";
+
+import { join, resolve } from "jsr:@std/path@0.224.0";
 import { relative } from "jsr:@std/path@0.204.0";
 import { abortable } from "jsr:@std/async@0.224.0";
 
@@ -17,6 +20,7 @@ type Params = {
 
 type Args = {
   denops: Denops;
+  context: Context;
   sourceOptions: SourceOptions;
   sourceParams: Params;
 };
@@ -25,13 +29,15 @@ export class Source extends BaseSource<Params> {
   override kind = "file";
 
   override gather(
-    { denops, sourceOptions, sourceParams }: Args,
+    { sourceOptions, sourceParams, context }: Args,
   ): ReadableStream<Item<ActionData>[]> {
     const abortController = new AbortController();
 
     return new ReadableStream({
       async start(controller) {
-        const root = sourceOptions.path || await fn.getcwd(denops) as string;
+        const root = treePath2Filename(
+          sourceOptions.path.length != 0 ? sourceOptions.path : context.path,
+        );
         const it = walk(
           resolve(root, root),
           sourceParams.ignoredDirectories,
