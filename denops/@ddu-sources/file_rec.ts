@@ -1,16 +1,18 @@
 import {
   BaseSource,
-  Context,
-  Item,
-  SourceOptions,
-} from "https://deno.land/x/ddu_vim@v4.0.0/types.ts";
-import { Denops } from "https://deno.land/x/ddu_vim@v4.0.0/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v4.0.0/utils.ts";
-import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.7.1/file.ts";
+  type Context,
+  type Item,
+  type SourceOptions,
+} from "jsr:@shougo/ddu-vim@^5.0.0/types";
+import { treePath2Filename } from "jsr:@shougo/ddu-vim@^5.0.0/utils";
 
-import { join, resolve } from "jsr:@std/path@0.224.0";
-import { relative } from "jsr:@std/path@0.204.0";
-import { abortable } from "jsr:@std/async@0.224.0";
+import { type ActionData } from "jsr:@shougo/ddu-kind-file@^0.8.0";
+
+import type { Denops } from "jsr:@denops/core@^7.0.0";
+
+import { join, resolve } from "jsr:@std/path@1.0.2";
+import { relative } from "jsr:@std/path@1.0.2";
+import { abortable } from "jsr:@std/async@1.0.1";
 
 type Params = {
   chunkSize: 1000;
