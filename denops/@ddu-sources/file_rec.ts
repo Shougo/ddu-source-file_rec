@@ -2,11 +2,9 @@ import {
   type Context,
   type Item,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@~6.1.0/types";
-import {
-  BaseSource,
-} from "jsr:@shougo/ddu-vim@~6.1.0/source";
-import { treePath2Filename } from "jsr:@shougo/ddu-vim@~6.1.0/utils";
+} from "jsr:@shougo/ddu-vim@~9.4.0/types";
+import { BaseSource } from "jsr:@shougo/ddu-vim@~9.4.0/source";
+import { treePath2Filename } from "jsr:@shougo/ddu-vim@~9.4.0/utils";
 
 import { type ActionData } from "jsr:@shougo/ddu-kind-file@~0.9.0";
 
