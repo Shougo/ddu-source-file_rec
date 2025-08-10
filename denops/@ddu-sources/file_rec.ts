@@ -2,17 +2,18 @@ import {
   type Context,
   type Item,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@~9.4.0/types";
-import { BaseSource } from "jsr:@shougo/ddu-vim@~9.4.0/source";
-import { treePath2Filename } from "jsr:@shougo/ddu-vim@~9.4.0/utils";
+} from "jsr:@shougo/ddu-vim@~10.4.0/types";
+import { BaseSource } from "jsr:@shougo/ddu-vim@~10.4.0/source";
+import { QuitAbortReason } from "jsr:@shougo/ddu-vim@~10.4.0/state";
+import { treePath2Filename } from "jsr:@shougo/ddu-vim@~10.4.0/utils";
 
 import { type ActionData } from "jsr:@shougo/ddu-kind-file@~0.9.0";
 
 import type { Denops } from "jsr:@denops/core@~7.0.0";
 
-import { join } from "jsr:@std/path@~1.0.3/join";
-import { resolve } from "jsr:@std/path@~1.0.3/resolve";
-import { relative } from "jsr:@std/path@~1.0.3/relative";
+import { join } from "jsr:@std/path@~1.1.0/join";
+import { resolve } from "jsr:@std/path@~1.1.0/resolve";
+import { relative } from "jsr:@std/path@~1.1.0/relative";
 import { abortable } from "jsr:@std/async@~1.0.4/abortable";
 
 type Params = {
@@ -27,6 +28,15 @@ type Args = {
   sourceOptions: SourceOptions;
   sourceParams: Params;
 };
+
+function isQuitAbortReason(e: unknown): e is QuitAbortReason {
+  return Boolean(
+    e &&
+      typeof e === "object" &&
+      "type" in e &&
+      (e as QuitAbortReason).type === "quit",
+  );
+}
 
 export class Source extends BaseSource<Params> {
   override kind = "file";
@@ -63,7 +73,7 @@ export class Source extends BaseSource<Params> {
             controller.enqueue(items);
           }
         } catch (e: unknown) {
-          if (e instanceof DOMException) {
+          if (e instanceof DOMException || isQuitAbortReason(e)) {
             return;
           }
           console.error(e);
