@@ -4,7 +4,6 @@ import {
   type SourceOptions,
 } from "jsr:@shougo/ddu-vim@~10.4.0/types";
 import { BaseSource } from "jsr:@shougo/ddu-vim@~10.4.0/source";
-import { QuitAbortReason } from "jsr:@shougo/ddu-vim@~10.4.0/state";
 import { treePath2Filename } from "jsr:@shougo/ddu-vim@~10.4.0/utils";
 
 import { type ActionData } from "jsr:@shougo/ddu-kind-file@~0.9.0";
@@ -28,15 +27,6 @@ type Args = {
   sourceOptions: SourceOptions;
   sourceParams: Params;
 };
-
-function isQuitAbortReason(e: unknown): e is QuitAbortReason {
-  return Boolean(
-    e &&
-      typeof e === "object" &&
-      "type" in e &&
-      (e as QuitAbortReason).type === "quit",
-  );
-}
 
 export class Source extends BaseSource<Params> {
   override kind = "file";
@@ -73,10 +63,11 @@ export class Source extends BaseSource<Params> {
             controller.enqueue(items);
           }
         } catch (e: unknown) {
-          if (e instanceof DOMException || isQuitAbortReason(e)) {
-            return;
+          if (e instanceof Error && e.name.includes("AbortReason")) {
+            // Ignore AbortReason errors
+          } else {
+            console.error(e);
           }
-          console.error(e);
         } finally {
           controller.close();
         }
