@@ -48,7 +48,7 @@ export class Source extends BaseSource<Params> {
         let items: Item<ActionData>[] = [];
         try {
           for await (const chunk of it) {
-            items = items.concat(chunk);
+            items = [...items, ...chunk];
             if (items.length >= enqueueSize) {
               enqueueSize = 10 * sourceParams.chunkSize;
               controller.enqueue(items);
