@@ -108,6 +108,10 @@ async function* walk(
         if (!stat.isDirectory) {
           const n = chunk.push({
             word: relative(root, abspath),
+            status: {
+              size: stat.size,
+              time: stat.mtime?.getTime(),
+            },
             action: {
               path: abspath,
               isDirectory: false,
