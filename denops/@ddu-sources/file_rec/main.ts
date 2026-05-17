@@ -74,6 +74,8 @@ export class Source extends BaseSource<Params> {
   }
 }
 
+// Iterative implementation to avoid deep recursion and reduce redundant
+// realPath calls.
 async function* walk(
   root: string,
   ignoredDirectories: string[],
@@ -81,11 +83,22 @@ async function* walk(
   chunkSize: number,
   expandSymbolicLink: boolean,
 ): AsyncGenerator<Item<ActionData>[]> {
-  const walk = async function* (
-    dir: string,
-  ): AsyncGenerator<Item<ActionData>[]> {
-    let chunk: Item<ActionData>[] = [];
-    const ignoredSet = new Set(ignoredDirectories);
+  const ignoredSet = new Set<string>(ignoredDirectories);
+  const visited = new Set<string>();
+
+  // Try to resolve real path of root; fallback to root itself on failure.
+  try {
+    const rootReal = await Deno.realPath(root);
+    visited.add(rootReal);
+  } catch {
+    visited.add(root);
+  }
+
+  const stack: string[] = [root];
+  let chunk: Item<ActionData>[] = [];
+
+  while (stack.length) {
+    const dir = stack.pop()!;
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
@@ -108,35 +121,47 @@ async function* walk(
               isDirectory: false,
             },
           });
+
           if (n >= chunkSize) {
             yield chunk;
             chunk = [];
           }
-        } else if (ignoredSet.has(entry.name)) {
-          continue;
-        } else if (
-          stat.isSymlink && stat.isDirectory &&
-          abspath.includes(await Deno.realPath(abspath))
-        ) {
-          // Looped link
-          continue;
         } else {
-          yield* walk(abspath);
+          // Directory
+          if (ignoredSet.has(entry.name)) {
+            continue;
+          }
+
+          if (stat.isSymlink && stat.isDirectory) {
+            // Resolve real path for symlinked directory once and skip if
+            // already visited
+            const real = await Deno.realPath(abspath).catch(() => null);
+            if (real && visited.has(real)) {
+              // Looped link or already visited
+              continue;
+            }
+            if (real) {
+              visited.add(real);
+            }
+          }
+
+          // Push directory to stack for later traversal
+          stack.push(abspath);
         }
-      }
-      if (chunk.length) {
-        yield chunk;
       }
     } catch (e: unknown) {
       if (e instanceof Deno.errors.PermissionDenied) {
         // Ignore this error
         // See https://github.com/Shougo/ddu-source-file_rec/issues/2
-        return;
+        continue;
       }
       throw e;
     }
-  };
-  yield* walk(root);
+  }
+
+  if (chunk.length) {
+    yield chunk;
+  }
 }
 
 async function readStat(
