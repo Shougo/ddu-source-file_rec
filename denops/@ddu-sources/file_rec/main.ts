@@ -2,7 +2,7 @@ import type { Context, Item, SourceOptions } from "@shougo/ddu-vim/types";
 import { BaseSource } from "@shougo/ddu-vim/source";
 import { treePath2Filename } from "@shougo/ddu-vim/utils";
 
-import { type ActionData } from "@shougo/ddu-kind-file";
+import type { ActionData } from "@shougo/ddu-kind-file";
 
 import type { Denops } from "@denops/std";
 
@@ -44,19 +44,9 @@ export class Source extends BaseSource<Params> {
           sourceParams.chunkSize,
           sourceParams.expandSymbolicLink,
         );
-        let enqueueSize: number = sourceParams.chunkSize;
-        let items: Item<ActionData>[] = [];
         try {
           for await (const chunk of it) {
-            items = [...items, ...chunk];
-            if (items.length >= enqueueSize) {
-              enqueueSize = 10 * sourceParams.chunkSize;
-              controller.enqueue(items);
-              items = [];
-            }
-          }
-          if (items.length) {
-            controller.enqueue(items);
+            controller.enqueue(chunk);
           }
         } catch (e: unknown) {
           if (e instanceof Error && e.name.includes("AbortReason")) {
@@ -95,6 +85,7 @@ async function* walk(
     dir: string,
   ): AsyncGenerator<Item<ActionData>[]> {
     let chunk: Item<ActionData>[] = [];
+    const ignoredSet = new Set(ignoredDirectories);
     try {
       for await (const entry of abortable(Deno.readDir(dir), signal)) {
         const abspath = join(dir, entry.name);
@@ -121,7 +112,7 @@ async function* walk(
             yield chunk;
             chunk = [];
           }
-        } else if (ignoredDirectories.includes(entry.name)) {
+        } else if (ignoredSet.has(entry.name)) {
           continue;
         } else if (
           stat.isSymlink && stat.isDirectory &&
