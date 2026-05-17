@@ -12,7 +12,7 @@ import { relative } from "@std/path/relative";
 import { abortable } from "@std/async/abortable";
 
 type Params = {
-  chunkSize: 1000;
+  chunkSize: number;
   ignoredDirectories: string[];
   expandSymbolicLink: boolean;
 };
@@ -38,7 +38,7 @@ export class Source extends BaseSource<Params> {
           sourceOptions.path.length != 0 ? sourceOptions.path : context.path,
         );
         const it = walk(
-          resolve(root, root),
+          resolve(root),
           sourceParams.ignoredDirectories,
           abortController.signal,
           sourceParams.chunkSize,
